@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="./public/BlueLogo.png" alt="TradeLab Logo" />
+  <img src="./public/BlueLogo.png" alt="TradeLab Logo" width='600'/>
 </p>
 
 <div align="center">
