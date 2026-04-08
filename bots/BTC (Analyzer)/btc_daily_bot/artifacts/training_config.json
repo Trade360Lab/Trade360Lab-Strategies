@@ -1,0 +1,8 @@
+{
+    "expected_freq": "1h",
+    "lookback_bars": 500,
+    "decision_margin": 0.10,
+    "horizon": 8,
+    "threshold": 0.01,
+    "unsure_weight_multiplier": 0.9
+  }

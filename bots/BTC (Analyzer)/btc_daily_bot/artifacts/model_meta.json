@@ -1,0 +1,7 @@
+{
+    "model_version": "btc_h1_xgb_v1",
+    "symbol": "BTCUSDT",
+    "timeframe": "1h",
+    "trained_at_utc": "2026-04-08T12:00:00Z",
+    "train_comment": "H1 multiclass XGBoost daily forecast model"
+  }
