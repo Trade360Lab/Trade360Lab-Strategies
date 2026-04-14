@@ -30,31 +30,18 @@ def _env_float(name: str, default: float) -> float:
 class StrategyConfig:
     """Strategy parameters ported into runtime configuration."""
 
-    rsi_period: int = 14
-    rsi_reclaim_level: float = 52.0
-    rsi_exit_level: float = 48.0
     macd_fast: int = 12
     macd_slow: int = 26
     macd_signal: int = 9
-    require_macd_hist_positive: bool = True
-    require_macd_hist_rising: bool = False
-    chaikin_confirmation: str = "cmf"
-    cmf_period: int = 20
-    chaikin_osc_fast: int = 3
-    chaikin_osc_slow: int = 10
-    chaikin_entry_threshold: float = 0.0
-    chaikin_exit_threshold: float = 0.0
+    rsi_period: int = 14
+    rsi_entry_level: float = 45.0
+    rsi_exit_level: float = 40.0
     atr_period: int = 14
     atr_stop_mult: float = 1.5
-    swing_window: int = 12
-    structural_stop_buffer_pct: float = 0.0
     enable_signal_exit: bool = True
-    signal_exit_on_macd_bearish: bool = True
-    signal_exit_on_rsi_loss: bool = True
-    signal_exit_on_chaikin_loss: bool = False
     risk_per_trade: float = 0.01
-    rr_target: float = 1.8
-    max_bars_in_trade: int = 48
+    rr_target: float = 1.5
+    max_bars_in_trade: int = 72
     debug: bool = False
 
     @property
@@ -62,12 +49,9 @@ class StrategyConfig:
         """Minimum amount of candles needed to evaluate the strategy."""
 
         return max(
-            self.rsi_period + 3,
             self.macd_slow + self.macd_signal + 3,
-            self.cmf_period + 3,
-            self.chaikin_osc_slow + 3,
+            self.rsi_period + 3,
             self.atr_period + 3,
-            self.swing_window + 3,
         )
 
 
@@ -76,7 +60,7 @@ class MarketConfig:
     """Market data settings."""
 
     symbol: str = "BTCUSDT"
-    timeframe: str = "5m"
+    timeframe: str = "15m"
     history_limit: int = 400
     poll_interval_seconds: float = 2.0
     request_timeout_seconds: float = 20.0
@@ -142,7 +126,7 @@ class AppConfig:
     """Top-level runtime configuration."""
 
     app_name: str = "RSIChaikBot"
-    strategy_name: str = "RSIMACDChaikin"
+    strategy_name: str = "BTCMacdRsi"
     log_level: str = "INFO"
     kill_switch: bool = False
     loop_error_sleep_seconds: float = 5.0
@@ -163,7 +147,7 @@ class AppConfig:
             loop_error_sleep_seconds=_env_float("LOOP_ERROR_SLEEP_SECONDS", 5.0),
             market=MarketConfig(
                 symbol=os.getenv("SYMBOL", "BTCUSDT").upper(),
-                timeframe=os.getenv("TIMEFRAME", "5m"),
+                timeframe=os.getenv("TIMEFRAME", "15m"),
                 history_limit=_env_int("HISTORY_LIMIT", 400),
                 poll_interval_seconds=_env_float("POLL_INTERVAL_SECONDS", 2.0),
                 request_timeout_seconds=_env_float("REQUEST_TIMEOUT_SECONDS", 20.0),
@@ -174,31 +158,18 @@ class AppConfig:
                 ),
             ),
             strategy=StrategyConfig(
-                rsi_period=_env_int("RSI_PERIOD", 14),
-                rsi_reclaim_level=_env_float("RSI_RECLAIM_LEVEL", 52.0),
-                rsi_exit_level=_env_float("RSI_EXIT_LEVEL", 48.0),
                 macd_fast=_env_int("MACD_FAST", 12),
                 macd_slow=_env_int("MACD_SLOW", 26),
                 macd_signal=_env_int("MACD_SIGNAL", 9),
-                require_macd_hist_positive=_env_bool("REQUIRE_MACD_HIST_POSITIVE", True),
-                require_macd_hist_rising=_env_bool("REQUIRE_MACD_HIST_RISING", False),
-                chaikin_confirmation=os.getenv("CHAIKIN_CONFIRMATION", "cmf").strip().lower(),
-                cmf_period=_env_int("CMF_PERIOD", 20),
-                chaikin_osc_fast=_env_int("CHAIKIN_OSC_FAST", 3),
-                chaikin_osc_slow=_env_int("CHAIKIN_OSC_SLOW", 10),
-                chaikin_entry_threshold=_env_float("CHAIKIN_ENTRY_THRESHOLD", 0.0),
-                chaikin_exit_threshold=_env_float("CHAIKIN_EXIT_THRESHOLD", 0.0),
+                rsi_period=_env_int("RSI_PERIOD", 14),
+                rsi_entry_level=_env_float("RSI_ENTRY_LEVEL", 45.0),
+                rsi_exit_level=_env_float("RSI_EXIT_LEVEL", 40.0),
                 atr_period=_env_int("ATR_PERIOD", 14),
                 atr_stop_mult=_env_float("ATR_STOP_MULT", 1.5),
-                swing_window=_env_int("SWING_WINDOW", 12),
-                structural_stop_buffer_pct=_env_float("STRUCTURAL_STOP_BUFFER_PCT", 0.0),
                 enable_signal_exit=_env_bool("ENABLE_SIGNAL_EXIT", True),
-                signal_exit_on_macd_bearish=_env_bool("SIGNAL_EXIT_ON_MACD_BEARISH", True),
-                signal_exit_on_rsi_loss=_env_bool("SIGNAL_EXIT_ON_RSI_LOSS", True),
-                signal_exit_on_chaikin_loss=_env_bool("SIGNAL_EXIT_ON_CHAIKIN_LOSS", False),
                 risk_per_trade=_env_float("RISK_PER_TRADE", 0.01),
-                rr_target=_env_float("RR_TARGET", 1.8),
-                max_bars_in_trade=_env_int("MAX_BARS_IN_TRADE", 48),
+                rr_target=_env_float("RR_TARGET", 1.5),
+                max_bars_in_trade=_env_int("MAX_BARS_IN_TRADE", 72),
                 debug=_env_bool("STRATEGY_DEBUG", False),
             ),
             execution=ExecutionConfig(
@@ -235,14 +206,14 @@ class AppConfig:
             raise ValueError("MACD_SIGNAL must be positive.")
         if self.strategy.rsi_period <= 1:
             raise ValueError("RSI_PERIOD must be greater than 1.")
-        if not 0.0 <= self.strategy.rsi_reclaim_level <= 100.0:
-            raise ValueError("RSI_RECLAIM_LEVEL must be between 0 and 100.")
+        if not 0.0 <= self.strategy.rsi_entry_level <= 100.0:
+            raise ValueError("RSI_ENTRY_LEVEL must be between 0 and 100.")
         if not 0.0 <= self.strategy.rsi_exit_level <= 100.0:
             raise ValueError("RSI_EXIT_LEVEL must be between 0 and 100.")
-        if self.strategy.chaikin_confirmation not in {"cmf", "oscillator"}:
-            raise ValueError("CHAIKIN_CONFIRMATION must be either 'cmf' or 'oscillator'.")
-        if self.strategy.atr_period <= 0 or self.strategy.swing_window <= 1:
-            raise ValueError("ATR_PERIOD must be positive and SWING_WINDOW must be greater than 1.")
+        if self.strategy.rsi_exit_level >= self.strategy.rsi_entry_level:
+            raise ValueError("RSI_EXIT_LEVEL must be smaller than RSI_ENTRY_LEVEL.")
+        if self.strategy.atr_period <= 0:
+            raise ValueError("ATR_PERIOD must be positive.")
         if not 0.0 < self.strategy.risk_per_trade <= 1.0:
             raise ValueError("RISK_PER_TRADE must be between 0 and 1.")
         if self.strategy.rr_target <= 0:

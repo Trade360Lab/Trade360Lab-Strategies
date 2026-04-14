@@ -1,4 +1,4 @@
-"""Pure RSI + MACD + Chaikin strategy logic."""
+"""Pure MACD + RSI reclaim strategy logic."""
 
 from __future__ import annotations
 
@@ -6,19 +6,6 @@ from logging import Logger
 
 from .config import StrategyConfig
 from .models import Candle, PositionState, Signal
-
-
-def _sma(values: list[float], period: int) -> list[float | None]:
-    result: list[float | None] = [None] * len(values)
-    if period <= 0 or len(values) < period:
-        return result
-
-    rolling_sum = sum(values[:period])
-    result[period - 1] = rolling_sum / period
-    for index in range(period, len(values)):
-        rolling_sum += values[index] - values[index - period]
-        result[index] = rolling_sum / period
-    return result
 
 
 def _ema(values: list[float], period: int) -> list[float | None]:
@@ -127,61 +114,8 @@ def _macd(
     return macd_line, signal_line, macd_hist
 
 
-def _cmf(candles: list[Candle], period: int) -> list[float | None]:
-    result: list[float | None] = [None] * len(candles)
-    if period <= 0 or len(candles) < period:
-        return result
-
-    money_flow_volume: list[float] = []
-    volumes: list[float] = []
-    for candle in candles:
-        if candle.high == candle.low:
-            multiplier = 0.0
-        else:
-            multiplier = ((candle.close - candle.low) - (candle.high - candle.close)) / (candle.high - candle.low)
-        money_flow_volume.append(multiplier * candle.volume)
-        volumes.append(candle.volume)
-
-    rolling_mfv = sum(money_flow_volume[:period])
-    rolling_volume = sum(volumes[:period])
-    result[period - 1] = (rolling_mfv / rolling_volume) if rolling_volume > 0 else 0.0
-
-    for index in range(period, len(candles)):
-        rolling_mfv += money_flow_volume[index] - money_flow_volume[index - period]
-        rolling_volume += volumes[index] - volumes[index - period]
-        result[index] = (rolling_mfv / rolling_volume) if rolling_volume > 0 else 0.0
-
-    return result
-
-
-def _adl(candles: list[Candle]) -> list[float]:
-    result: list[float] = []
-    running = 0.0
-    for candle in candles:
-        if candle.high == candle.low:
-            multiplier = 0.0
-        else:
-            multiplier = ((candle.close - candle.low) - (candle.high - candle.close)) / (candle.high - candle.low)
-        running += multiplier * candle.volume
-        result.append(running)
-    return result
-
-
-def _chaikin_oscillator(candles: list[Candle], fast_period: int, slow_period: int) -> list[float | None]:
-    adl_values = _adl(candles)
-    fast_values = _ema(adl_values, fast_period)
-    slow_values = _ema(adl_values, slow_period)
-    result: list[float | None] = [None] * len(candles)
-
-    for index, (fast_value, slow_value) in enumerate(zip(fast_values, slow_values, strict=True)):
-        if fast_value is None or slow_value is None:
-            continue
-        result[index] = fast_value - slow_value
-    return result
-
-
-class RSIMACDChaikinStrategy:
-    """Long-only real-time port for RSI + MACD + Chaikin confirmation."""
+class MACDRSIStrategy:
+    """Long-only real-time port for the notebook MACD + RSI reclaim logic."""
 
     def __init__(self, config: StrategyConfig, symbol: str, timeframe: str, logger: Logger) -> None:
         self.config = config
@@ -198,14 +132,13 @@ class RSIMACDChaikinStrategy:
                 action="hold",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="warmup",
                 metadata={"required_bars": self.config.warmup_bars, "available_bars": len(candles)},
             )
 
         closes = [candle.close for candle in candles]
-        lows = [candle.low for candle in candles]
 
         rsi_values = _rsi_wilder(closes, self.config.rsi_period)
         macd_line_values, macd_signal_values, macd_hist_values = _macd(
@@ -214,30 +147,20 @@ class RSIMACDChaikinStrategy:
             self.config.macd_slow,
             self.config.macd_signal,
         )
-        cmf_values = _cmf(candles, self.config.cmf_period)
-        chaikin_osc_values = _chaikin_oscillator(
-            candles,
-            self.config.chaikin_osc_fast,
-            self.config.chaikin_osc_slow,
-        )
         atr_values = _atr_wilder(candles, self.config.atr_period)
 
         rsi = rsi_values[-1]
         previous_rsi = rsi_values[-2]
         macd_line = macd_line_values[-1]
         macd_signal = macd_signal_values[-1]
-        macd_hist = macd_hist_values[-1]
-        previous_hist = macd_hist_values[-2]
         atr = atr_values[-1]
-        chaikin_value = cmf_values[-1] if self.config.chaikin_confirmation == "cmf" else chaikin_osc_values[-1]
-        recent_swing_low = self._lowest_excluding_current(lows, self.config.swing_window)
 
-        if None in {rsi, previous_rsi, macd_line, macd_signal, macd_hist, atr, chaikin_value, recent_swing_low}:
+        if None in {rsi, previous_rsi, macd_line, macd_signal, atr}:
             return Signal(
                 action="hold",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="indicator_unavailable",
             )
@@ -248,53 +171,41 @@ class RSIMACDChaikinStrategy:
             "previous_rsi": float(previous_rsi),
             "macd_line": float(macd_line),
             "macd_signal": float(macd_signal),
-            "macd_hist": float(macd_hist),
-            "chaikin_mode": self.config.chaikin_confirmation,
-            "chaikin_value": float(chaikin_value),
             "atr": float(atr),
-            "recent_swing_low": float(recent_swing_low),
         }
 
         if position is not None:
             return self._evaluate_exit(latest, candles, position, diagnostics)
 
-        macd_bullish = (macd_line > macd_signal) and (
-            (not self.config.require_macd_hist_positive) or (macd_hist > 0)
-        )
-        if self.config.require_macd_hist_rising:
-            macd_bullish = macd_bullish and previous_hist is not None and macd_hist >= previous_hist
-
-        rsi_reclaim = previous_rsi <= self.config.rsi_reclaim_level < rsi
-        chaikin_confirmed = chaikin_value > self.config.chaikin_entry_threshold
+        macd_bullish = macd_line > macd_signal
+        rsi_reclaim = previous_rsi <= self.config.rsi_entry_level < rsi
 
         diagnostics.update(
             {
                 "macd_bullish": macd_bullish,
                 "rsi_reclaim": rsi_reclaim,
-                "chaikin_confirmed": chaikin_confirmed,
             }
         )
 
-        if not (macd_bullish and rsi_reclaim and chaikin_confirmed):
+        if not (macd_bullish and rsi_reclaim):
             return Signal(
                 action="hold",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="filters_not_satisfied",
                 metadata=diagnostics,
             )
 
-        structural_stop = recent_swing_low * (1.0 - self.config.structural_stop_buffer_pct)
         atr_stop = latest.close - (self.config.atr_stop_mult * atr)
-        stop_price = min(structural_stop, atr_stop)
+        stop_price = atr_stop
         if stop_price >= latest.close:
             return Signal(
                 action="hold",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="invalid_stop",
                 metadata=diagnostics,
@@ -303,7 +214,6 @@ class RSIMACDChaikinStrategy:
         take_price = latest.close + self.config.rr_target * (latest.close - stop_price)
         diagnostics.update(
             {
-                "structural_stop": float(structural_stop),
                 "atr_stop": float(atr_stop),
             }
         )
@@ -312,7 +222,7 @@ class RSIMACDChaikinStrategy:
             action="entry",
             symbol=self.symbol,
             timeframe=self.timeframe,
-            strategy_name="RSIMACDChaikin",
+            strategy_name="BTCMacdRsi",
             timestamp=latest.close_time,
             reason="long_entry",
             entry_price=latest.close,
@@ -339,7 +249,7 @@ class RSIMACDChaikinStrategy:
                 action="exit",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="stop_loss",
                 exit_price=position.stop_price,
@@ -351,7 +261,7 @@ class RSIMACDChaikinStrategy:
                 action="exit",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="take_profit",
                 exit_price=position.take_price,
@@ -363,14 +273,11 @@ class RSIMACDChaikinStrategy:
             macd_line = float(diagnostics["macd_line"])
             macd_signal = float(diagnostics["macd_signal"])
             rsi = float(diagnostics["rsi"])
-            chaikin_value = float(diagnostics["chaikin_value"])
 
-            if self.config.signal_exit_on_macd_bearish and macd_line < macd_signal:
+            if macd_line < macd_signal:
                 exit_reasons.append("macd_bearish")
-            if self.config.signal_exit_on_rsi_loss and rsi < self.config.rsi_exit_level:
+            if rsi < self.config.rsi_exit_level:
                 exit_reasons.append("rsi_lost_level")
-            if self.config.signal_exit_on_chaikin_loss and chaikin_value <= self.config.chaikin_exit_threshold:
-                exit_reasons.append("chaikin_lost_confirmation")
 
             if exit_reasons:
                 diagnostics["signal_exit_reasons"] = exit_reasons
@@ -378,7 +285,7 @@ class RSIMACDChaikinStrategy:
                     action="exit",
                     symbol=self.symbol,
                     timeframe=self.timeframe,
-                    strategy_name="RSIMACDChaikin",
+                    strategy_name="BTCMacdRsi",
                     timestamp=latest.close_time,
                     reason="signal_exit",
                     exit_price=latest.close,
@@ -390,7 +297,7 @@ class RSIMACDChaikinStrategy:
                 action="exit",
                 symbol=self.symbol,
                 timeframe=self.timeframe,
-                strategy_name="RSIMACDChaikin",
+                strategy_name="BTCMacdRsi",
                 timestamp=latest.close_time,
                 reason="timeout",
                 exit_price=latest.close,
@@ -401,17 +308,11 @@ class RSIMACDChaikinStrategy:
             action="hold",
             symbol=self.symbol,
             timeframe=self.timeframe,
-            strategy_name="RSIMACDChaikin",
+            strategy_name="BTCMacdRsi",
             timestamp=latest.close_time,
             reason="position_open",
             metadata=diagnostics,
         )
-
-    @staticmethod
-    def _lowest_excluding_current(values: list[float], lookback: int) -> float | None:
-        if len(values) < lookback + 1:
-            return None
-        return min(values[-lookback - 1:-1])
 
     @staticmethod
     def _bars_held(candles: list[Candle], position: PositionState) -> int:

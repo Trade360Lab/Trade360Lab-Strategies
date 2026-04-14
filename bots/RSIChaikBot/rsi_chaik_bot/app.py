@@ -15,7 +15,7 @@ from .execution import (
 from .market import BaseMarketDataClient, PollingBinanceMarketDataClient
 from .models import BotState, Candle, OrderIntent, OrderResult, PositionState, Signal
 from .storage import append_signal, append_trade, load_state, save_state
-from .strategy import RSIMACDChaikinStrategy
+from .strategy import MACDRSIStrategy
 from .utils import round_price, setup_logger, utc_now
 
 
@@ -26,7 +26,7 @@ class RSIChaikBotRuntime:
         self.config = config
         self.logger = logger
         self.market: BaseMarketDataClient = PollingBinanceMarketDataClient(config.market, logger)
-        self.strategy = RSIMACDChaikinStrategy(
+        self.strategy = MACDRSIStrategy(
             config=config.strategy,
             symbol=config.market.symbol,
             timeframe=config.market.timeframe,

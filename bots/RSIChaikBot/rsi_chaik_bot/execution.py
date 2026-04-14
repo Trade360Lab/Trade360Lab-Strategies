@@ -103,7 +103,7 @@ class PaperExecutionClient(BaseExecutionClient):
             entry_time=intent.signal_time,
             stop_price=intent.stop_price or 0.0,
             take_price=intent.take_price or 0.0,
-            strategy_name=signal.strategy_name if signal is not None else "RSIMACDChaikin",
+            strategy_name=signal.strategy_name if signal is not None else "BTCMacdRsi",
             entry_reason=intent.reason,
             bars_held=0,
             last_update_time=utc_now(),
