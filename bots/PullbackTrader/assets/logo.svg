@@ -1,0 +1,12 @@
+<svg width="720" height="180" viewBox="0 0 720 180" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="720" height="180" rx="24" fill="#0D1B2A"/>
+  <path d="M54 118C86 118 91 70 127 70C160 70 160 126 197 126C232 126 242 47 281 47C319 47 323 99 364 99C395 99 411 66 438 66" stroke="#3AAFA9" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M438 66L428 54" stroke="#F4A261" stroke-width="10" stroke-linecap="round"/>
+  <path d="M438 66L423 68" stroke="#F4A261" stroke-width="10" stroke-linecap="round"/>
+  <rect x="474" y="46" width="8" height="44" rx="4" fill="#E0FBFC"/>
+  <rect x="488" y="34" width="8" height="68" rx="4" fill="#3AAFA9"/>
+  <rect x="502" y="58" width="8" height="24" rx="4" fill="#E76F51"/>
+  <path d="M540 68H666" stroke="#23395B" stroke-width="2"/>
+  <text x="540" y="84" fill="#E0FBFC" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="700" letter-spacing="1.5">PullbackTrader</text>
+  <text x="540" y="112" fill="#7FA7C2" font-family="Segoe UI, Arial, sans-serif" font-size="14" letter-spacing="3">TREND + PULLBACK RUNTIME</text>
+</svg>
