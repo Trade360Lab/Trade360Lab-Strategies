@@ -1,14 +1,14 @@
-# PullbackTrader
 
-![PullbackTrader](assets/logo.svg)
 
-## О проекте
+![PullbackTrader](assets/LogoBlue.png)
+
+<h1 align="center">PullbackTrader</h1>
 
 **PullbackTrader** — это minimal production-like runtime-каркас для real-time торговли по стратегии **Trend + Pullback** на `BTCUSDT 5m`.
 
 Проект не заменяет исследовательский notebook и не предназначен для бэктестинга. Его задача — перенести уже существующую notebook-логику в понятную runtime-архитектуру, которую потом можно подключать к paper execution и далее к live execution.
 
-## Что это за бот
+<h2 align="center">Что это за бот</h2>
 
 Бот работает по закрытой свече и делает следующее:
 
@@ -20,7 +20,7 @@
 - хранит state в JSON
 - пишет сигналы и сделки в CSV
 
-## Важное предупреждение
+<h2 align="center">Важное предупреждение</h2>
 
 Это **runtime skeleton**, а не готовая live-trading система.
 
@@ -32,7 +32,7 @@
 - восстановление после рестарта
 - reconciliation локального состояния с exchange state
 
-## Что это за стратегия
+<h2 align="center">Что это за стратегия</h2>
 
 **Trend + Pullback** — это вход по направлению уже существующего восходящего движения, но не в момент перегретого импульса, а после контролируемого отката.
 
@@ -66,7 +66,7 @@
 - боковик ухудшает качество сигналов
 - результат чувствителен к исполнению и параметрам фильтров
 
-## Связь с исследовательским ноутбуком
+<h2 align="center">Связь с исследовательским ноутбуком</h2>
 
 В каталоге проекта сохранён `Strategy.ipynb`.
 
@@ -91,7 +91,7 @@
 - timeout по количеству баров
 - sizing через `risk_per_trade`
 
-## Структура проекта
+<h2 align="center">Структура проекта</h2>
 
 ```text
 PullbackTrader/
@@ -118,7 +118,7 @@ PullbackTrader/
 └── state/
 ```
 
-## Описание файлов
+<h2 align="center">Описание файлов</h2>
 
 - `pullback_trader/app.py` — главный entrypoint и runtime loop
 - `pullback_trader/config.py` — единая конфигурация и чтение `.env`
@@ -129,7 +129,7 @@ PullbackTrader/
 - `pullback_trader/storage.py` — JSON state и CSV логи
 - `pullback_trader/utils.py` — logger, safe float, rounding, time helpers
 
-## Логика стратегии
+<h2 align="center">Логика стратегии</h2>
 
 Runtime-реализация сохраняет порядок проверок из notebook:
 
@@ -155,7 +155,7 @@ Runtime-реализация сохраняет порядок проверок 
    - затем `take-profit`
    - затем `timeout`
 
-## Расшифровка параметров стратегии
+<h2 align="center">Расшифровка параметров стратегии</h2>
 
 - `ema_fast` — период быстрой EMA
 - `ema_slow` — период медленной EMA, определяющей основной тренд
@@ -175,9 +175,9 @@ Runtime-реализация сохраняет порядок проверок 
 - `atr_stop_mult` — множитель ATR для ATR-based stop
 - `max_bars_in_trade` — максимальное количество баров в позиции
 
-## Как запускается проект
+<h2 align="center">Как запускается проект</h2>
 
-### Локально
+<h3 align="center">Локально</h3>
 
 Linux/macOS:
 
@@ -199,7 +199,7 @@ Copy-Item .env.example .env
 python -m pullback_trader.app
 ```
 
-## Как работает runtime loop
+<h2 align="center">Как работает runtime loop</h2>
 
 `pullback_trader/app.py` делает следующее:
 
@@ -214,7 +214,7 @@ python -m pullback_trader.app
 9. Сохраняет `state/bot_state.json`
 10. Пишет сигналы и сделки в CSV
 
-## Где paper mode, где live mode
+<h2 align="center">Где paper mode, где live mode</h2>
 
 Сейчас доступны два execution-режима:
 
@@ -229,7 +229,7 @@ PAPER_MODE=true
 
 При этом `pullback_trader/strategy.py` не зависит от конкретного execution adapter.
 
-## Как хранится состояние
+<h2 align="center">Как хранится состояние</h2>
 
 Локальное состояние хранится в:
 
@@ -245,7 +245,7 @@ PAPER_MODE=true
 
 Важно: в будущем при live execution exchange state должен быть приоритетнее локального state. Для этого оставлен метод `sync_state()`.
 
-## Как логируются сигналы и сделки
+<h2 align="center">Как логируются сигналы и сделки</h2>
 
 - `data/signals.csv` — сигналы стратегии на закрытых свечах
 - `data/trades.csv` — факты исполнения ордеров
@@ -257,7 +257,7 @@ PAPER_MODE=true
 - сверки поведения с notebook
 - разбора ошибок и рестартов
 
-## Запуск через Docker
+<h2 align="center">Запуск через Docker</h2>
 
 Собрать образ:
 
@@ -282,24 +282,3 @@ docker compose up --build -d
 ```bash
 docker compose down
 ```
-
-## Recovery и kill switch
-
-В проекте есть базовые места для operational control:
-
-- recovery пропущенных свечей после рестарта
-- `kill_switch`, который позволяет держать runtime включённым без торговли
-- `last_error` в state для быстрой диагностики
-
-## Roadmap
-
-- добавить реальную интеграцию в `LiveExecutionClient`
-- добавить полноценный exchange reconciliation
-- подтянуть symbol filters и exchange metadata
-- добавить алерты и healthcheck
-- добавить unit-тесты на эквивалентность notebook/runtime
-- расширить risk controls для paper/live mode
-
-## Итог
-
-Этот проект сохраняет торговую модель из notebook и переводит её в аккуратный runtime-каркас для дальнейшего paper/live execution без переписывания торговой идеи.
