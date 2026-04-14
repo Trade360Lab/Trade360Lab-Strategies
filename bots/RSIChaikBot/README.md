@@ -1,8 +1,10 @@
 # RSIChaikBot
 
-**RSIChaikBot** — minimal production-like runtime-каркас для long-only стратегии `RSI + MACD + Chaikin` на закрытых свечах.
+**RSIChaikBot** — minimal production-like runtime-каркас для long-only стратегии `MACD + RSI reclaim` на закрытых свечах.
 
 Проект не заменяет исследовательский notebook и не пытается быть готовой live-trading системой. Его задача — вынести торговую идею в отдельную runtime-архитектуру с разделением на strategy, market polling, execution и persistence.
+
+Имя проекта сохранено прежним, но текущая версия исследовательской логики в `Strategy.ipynb` уже не использует Chaikin-подтверждение.
 
 ## Что это за бот
 
@@ -37,36 +39,31 @@ Paper mode по умолчанию предназначен только для 
 
 ## Что это за стратегия
 
-Стратегия long-only и строится на комбинации трёх сигналов:
+Стратегия long-only и строится на комбинации двух сигналов:
 
 1. `MACD` должен быть bullish.
 2. `RSI` должен reclaim-нуться вверх через заданный порог.
-3. `Chaikin` должен дать положительное подтверждение.
 
 Выходы поддерживаются в следующем порядке:
 
 1. `stop-loss`
 2. `take-profit` по `RR`
-3. optional `signal exit` при ухудшении MACD / RSI / Chaikin
+3. optional `signal exit` при ухудшении MACD / RSI
 4. `timeout` по числу баров
 
-Стоп рассчитывается как более консервативный из двух ориентиров:
-
-- структурный stop относительно локального минимума
-- ATR-based stop через `atr_stop_mult`
+Стоп рассчитывается через `ATR` и `atr_stop_mult`.
 
 Сильные стороны стратегии:
 
 - фильтрация импульса через MACD
 - вход не по любому RSI, а по reclaim через уровень
-- дополнительная проверка денежного потока через CMF или Chaikin oscillator
 - формализованный риск-менеджмент через `risk_per_trade`
 
 Слабые стороны стратегии:
 
 - чувствительность к задержкам и качеству closed-candle polling
 - уязвимость к боковику и резким разворотам после входа
-- результат сильно зависит от параметров RSI/MACD/Chaikin и модели исполнения
+- результат сильно зависит от параметров RSI/MACD и модели исполнения
 - локальный state без exchange reconciliation недостаточен для настоящего live режима
 
 ## Связь с исследовательским ноутбуком
@@ -131,18 +128,13 @@ RSIChaikBot/
 Runtime-реализация проверяет условия в таком порядке:
 
 1. Прогрев индикаторов.
-2. Расчёт `RSI`, `MACD`, `CMF` и `Chaikin oscillator`, `ATR`.
+2. Расчёт `RSI`, `MACD`, `ATR`.
 3. Если позиция уже открыта:
    `stop-loss -> take-profit -> signal exit -> timeout`
 4. Если позиции нет:
-   `MACD bullish -> RSI reclaim -> Chaikin positive confirmation`
+   `MACD bullish -> RSI reclaim`
 5. При валидном входе строятся `entry`, `stop`, `take` и риск на единицу.
 6. Размер позиции считается в runtime через `risk_per_trade`.
-
-Поддерживаются два варианта Chaikin-подтверждения:
-
-- `CHAIKIN_CONFIRMATION=cmf`
-- `CHAIKIN_CONFIRMATION=oscillator`
 
 ## Quick start / запуск
 
@@ -190,12 +182,10 @@ docker compose down
 - `HISTORY_LIMIT` — размер буфера свечей
 - `INITIAL_CASH`, `FEE_RATE`, `SLIPPAGE_PCT` — execution settings
 - `PRICE_STEP`, `QUANTITY_STEP`, `MIN_QUANTITY` — ограничения округления
-- `RSI_PERIOD`, `RSI_RECLAIM_LEVEL`, `RSI_EXIT_LEVEL` — RSI-параметры
 - `MACD_FAST`, `MACD_SLOW`, `MACD_SIGNAL` — MACD-параметры
-- `CHAIKIN_CONFIRMATION`, `CMF_PERIOD`, `CHAIKIN_OSC_FAST`, `CHAIKIN_OSC_SLOW` — Chaikin-параметры
-- `CHAIKIN_ENTRY_THRESHOLD`, `CHAIKIN_EXIT_THRESHOLD` — пороги подтверждения и signal exit
-- `ATR_PERIOD`, `ATR_STOP_MULT`, `SWING_WINDOW` — расчёт stop-loss
-- `ENABLE_SIGNAL_EXIT`, `SIGNAL_EXIT_ON_*` — правила выхода по ухудшению сигнала
+- `RSI_PERIOD`, `RSI_ENTRY_LEVEL`, `RSI_EXIT_LEVEL` — RSI-параметры
+- `ATR_PERIOD`, `ATR_STOP_MULT` — расчёт stop-loss
+- `ENABLE_SIGNAL_EXIT` — включение signal exit
 - `RISK_PER_TRADE`, `RR_TARGET`, `MAX_BARS_IN_TRADE` — риск и сопровождение позиции
 - `KILL_SWITCH` — глобальная блокировка торговой логики
 
