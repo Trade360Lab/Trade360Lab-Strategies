@@ -91,9 +91,11 @@ def get_logger(
     enable_file: bool = True,
 ) -> logging.Logger:
     """Create or reuse an application logger configured for JSON lines."""
-    resolved_level = logging.getLevelName(level) if isinstance(level, str) else level
-    if isinstance(resolved_level, str):
-        resolved_level = logging.INFO
+    resolved_level = (
+        logging._nameToLevel.get(level.upper(), logging.INFO)
+        if isinstance(level, str)
+        else level
+    )
 
     logger = logging.getLogger(name)
     logger.setLevel(resolved_level)
