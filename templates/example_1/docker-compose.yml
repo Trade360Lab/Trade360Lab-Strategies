@@ -1,0 +1,12 @@
+version: "3.9"
+
+services:
+  trader:
+    build: .
+    container_name: backtrader_bot
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./outputs:/app/outputs
+    command: python app/main.py
