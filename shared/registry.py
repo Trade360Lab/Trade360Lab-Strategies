@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
 import importlib.util
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -119,12 +121,15 @@ class StrategyRegistry:
             )
 
         module_name = ".".join(strategy_path.relative_to(self.root).with_suffix("").parts)
-        spec = importlib.util.spec_from_file_location(module_name, strategy_path)
-        if spec is None or spec.loader is None:
-            raise RegistryError(f"Could not create import spec for '{strategy_path}'.")
-
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        try:
+            module = importlib.import_module(module_name)
+        except ModuleNotFoundError:
+            spec = importlib.util.spec_from_file_location(module_name, strategy_path)
+            if spec is None or spec.loader is None:
+                raise RegistryError(f"Could not create import spec for '{strategy_path}'.")
+            module = importlib.util.module_from_spec(spec)
+            sys.modules[module_name] = module
+            spec.loader.exec_module(module)
 
         class_name = manifest["class_name"]
         strategy_class = getattr(module, class_name, None)
