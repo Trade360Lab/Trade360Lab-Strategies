@@ -1,56 +1,28 @@
-<p align="center">
-  <img src="./public/BlueLogo.png" alt="TradeLab Logo" width='600'/>
-</p>
+# Trade360Lab Strategies
 
-<div align="center">
-  
-# Registry of strategies
+Manifest-driven library of trading strategies for Trade360Lab. The repository provides a strict strategy contract, reusable indicators, automatic strategy discovery, example configs, and a testable path toward backtest, optimizer, and live-bot integration.
 
-</div>
-  
-Официальная библиотека торговых стратегий для TradeLab со стандартизированными реализациями, индикаторами и поддержкой бэктестинга и оптимизации.
+## What is Included
 
-<div align="center">
+- `shared/`: base strategy contract, dataframe validation, manifest schema, params helpers, signal helpers, and registry
+- `indicators/`: reusable pandas-based technical indicators
+- `strategies/`: production-oriented strategies grouped by category
+- `examples/`: example JSON payloads for launching strategies
+- `tests/`: unit and integration coverage
+- `STRATEGY_SPEC.md`: library contract and design rules
+- `CONTRIBUTING.md`: workflow for adding new strategies
 
-## Что находится в репозитории
-
-</div>
-
-Репозиторий содержит:
-
-* торговые стратегии;
-* переиспользуемые индикаторы;
-* единый контракт стратегии;
-* параметрические схемы;
-* примеры конфигураций;
-* тесты.
-
-<div align="center">
-
-## Возможности
-
-</div>
-
-* единая структура стратегий;
-* переиспользуемые индикаторы;
-* совместимость с бэктестингом;
-* подготовка к оптимизации параметров;
-* стандартизированные параметры для UI и backend;
-* расширяемая архитектура под новые стратегии.
-
-<div align="center">
-
-## Структура репозитория
-
-</div>
+## Project Structure
 
 ```text
-tradelab-strategies/
+.
 ├─ strategies/
 │  ├─ trend/
+│  │  └─ ema_cross/
 │  ├─ mean_reversion/
-│  ├─ breakout/
-│  └─ experimental/
+│  │  └─ rsi_reversion/
+│  └─ breakout/
+│     └─ donchian_breakout/
 ├─ indicators/
 │  ├─ trend/
 │  ├─ momentum/
@@ -59,60 +31,98 @@ tradelab-strategies/
 ├─ shared/
 ├─ examples/
 ├─ tests/
-├─ README.md
+│  ├─ fixtures/
+│  ├─ unit/
+│  └─ integration/
 ├─ STRATEGY_SPEC.md
-└─ CONTRIBUTING.md
+├─ CONTRIBUTING.md
+├─ README.md
+└─ pyproject.toml
 ```
 
-* `strategies/` — торговые стратегии, сгруппированные по типу;
-* `indicators/` — индикаторы, используемые в стратегиях;
-* `shared/` — общие типы, утилиты и вспомогательная логика;
-* `examples/` — примеры конфигураций и использования;
-* `tests/` — тесты стратегий, индикаторов и интеграционных сценариев.
+## Installation
 
-<div align="center">
+```bash
+python3 -m venv .venv
+.venv/bin/pip install -e '.[dev]'
+```
 
-## Структура стратегии
+## Running Checks
 
-</div>
+Run tests:
 
-Каждая стратегия хранится в отдельной директории и обычно включает:
+```bash
+.venv/bin/python -m pytest
+```
 
-* `strategy.py` — реализация логики стратегии;
-* `manifest.json` — описание стратегии, параметров и метаданных;
-* `README.md` — документация по стратегии;
-* `tests/` — тесты стратегии.
+Run lint:
 
-Пример:
+```bash
+.venv/bin/ruff check .
+```
+
+## Using the Registry
+
+Discover strategies:
+
+```python
+from shared.registry import StrategyRegistry
+
+registry = StrategyRegistry()
+print(registry.list_strategies())
+```
+
+Create a strategy instance by slug:
+
+```python
+from shared.registry import StrategyRegistry
+
+registry = StrategyRegistry()
+strategy = registry.create("ema_cross", {"fast_period": 12, "slow_period": 26})
+result = strategy.run(df)
+```
+
+Get manifest metadata:
+
+```python
+manifest = registry.get_manifest("rsi_reversion")
+search_space = registry.get_manifest("donchian_breakout")["parameters"]
+```
+
+## Available Strategies
+
+- `ema_cross`: EMA crossover trend-following strategy with optional short support
+- `rsi_reversion`: RSI-based mean-reversion strategy using recovery from oversold or overbought zones
+- `donchian_breakout`: breakout strategy based on prior Donchian channel boundaries
+
+## Contract Summary
+
+All strategies:
+- inherit from `shared.base_strategy.BaseStrategy`
+- accept `params` at initialization
+- validate OHLCV input schema
+- return the required signal columns
+- avoid lookahead bias
+- are discovered automatically from `strategies/**/manifest.json`
+
+Required signal columns:
+- `entry_long`
+- `entry_short`
+- `exit_long`
+- `exit_short`
+
+See `STRATEGY_SPEC.md` for the full contract.
+
+## Strategy Directory Layout
 
 ```text
-strategies/trend/ema_cross/
+strategies/<category>/<slug>/
 ├─ strategy.py
 ├─ manifest.json
 ├─ README.md
 └─ tests/
 ```
 
-<div align="center">
+## Notes
 
-## Как добавить новую стратегию
-
-</div>
-
-1. Создать директорию в нужной категории внутри `strategies/`.
-2. Реализовать стратегию в `strategy.py`.
-3. Добавить `manifest.json` с описанием параметров и метаданными.
-4. Добавить локальный `README.md`.
-5. Добавить тесты.
-6. Проверить соответствие спецификации из `STRATEGY_SPEC.md`.
-
-<div align="center">
-
-## Связь с Trade360Lab
-
-</div>
-
-Этот репозиторий является частью экосистемы TradeLab и предназначен для хранения, стандартизации и развития торговых стратегий, используемых в бэктестинге и оптимизации.
-
-<div align="center">
-
+This repository keeps strategy logic separate from execution-engine concerns. The current scope is a clean, extensible strategy library that downstream backtest and live-trading components can consume through a stable contract.
