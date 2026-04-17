@@ -1,0 +1,11 @@
+{
+  "strategy_slug": "donchian_breakout",
+  "params": {
+    "lookback": 20,
+    "exit_lookback": 10,
+    "allow_short": true
+  },
+  "market_type": "futures",
+  "timeframe": "4h",
+  "notes": "Classic breakout profile using a tighter exit channel."
+}

@@ -1,0 +1,14 @@
+{
+  "strategy_slug": "rsi_reversion",
+  "params": {
+    "rsi_period": 14,
+    "oversold": 30.0,
+    "overbought": 70.0,
+    "exit_mid": 50.0,
+    "allow_short": true
+  },
+  "market_type": "spot",
+  "timeframe": "1h",
+  "notes": "Baseline RSI mean-reversion setup for range-bound environments."
+}
+
