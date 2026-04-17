@@ -1,7 +1,9 @@
+from __future__ import annotations
+
 import json
-from pathlib import Path
 from datetime import datetime, timezone
-from typing import Dict, Any
+from pathlib import Path
+from typing import Any
 
 import joblib
 import numpy as np
@@ -120,34 +122,81 @@ def detect_momentum_state(last_row: pd.Series) -> str:
     return "neutral"
 
 
-def predict_latest_forecast(df: pd.DataFrame, artifacts_dir: Path) -> Dict[str, Any]:
-    with open(artifacts_dir / "feature_columns.json", "r", encoding="utf-8") as f:
-        feature_columns = json.load(f)
+def _load_json(path: Path) -> Any:
+    with path.open("r", encoding="utf-8") as file_obj:
+        return json.load(file_obj)
 
-    with open(artifacts_dir / "model_meta.json", "r", encoding="utf-8") as f:
-        model_meta = json.load(f)
 
-    with open(artifacts_dir / "training_config.json", "r", encoding="utf-8") as f:
-        training_config = json.load(f)
+def _validate_artifacts(artifacts_dir: Path) -> None:
+    required_paths = [
+        artifacts_dir / "feature_columns.json",
+        artifacts_dir / "model_meta.json",
+        artifacts_dir / "training_config.json",
+        artifacts_dir / "decision_config.json",
+    ]
+    missing = [path.name for path in required_paths if not path.exists()]
+    if missing:
+        raise FileNotFoundError(f"Missing required artifacts: {', '.join(missing)}")
 
     model_path = artifacts_dir / "model.pkl"
-    model = joblib.load(model_path)
+    if not model_path.exists():
+        raise FileNotFoundError(
+            f"Missing required model artifact: {model_path}. Export the trained model as model.pkl."
+        )
+
+
+def _build_model_input(features_df: pd.DataFrame, feature_columns: list[str]) -> tuple[pd.Series, pd.DataFrame]:
+    if features_df.empty:
+        raise ValueError("Feature frame is empty after preprocessing. Check lookback size and input OHLCV data.")
+
+    missing_columns = [column for column in feature_columns if column not in features_df.columns]
+    if missing_columns:
+        raise ValueError(f"Missing feature columns required by model: {', '.join(missing_columns)}")
+
+    last_row = features_df.iloc[-1].copy()
+    x_last = pd.DataFrame([last_row[feature_columns].to_dict()], columns=feature_columns)
+    return last_row, x_last
+
+
+def predict_latest_forecast(
+    df: pd.DataFrame,
+    artifacts_dir: Path,
+    decision_margin_override: float | None = None,
+) -> dict[str, Any]:
+    _validate_artifacts(artifacts_dir)
+    feature_columns = _load_json(artifacts_dir / "feature_columns.json")
+    model_meta = _load_json(artifacts_dir / "model_meta.json")
+    training_config = _load_json(artifacts_dir / "training_config.json")
+    decision_config = _load_json(artifacts_dir / "decision_config.json")
+
+    if not isinstance(feature_columns, list) or not feature_columns:
+        raise ValueError("feature_columns.json must contain a non-empty JSON array.")
+
+    model_path = artifacts_dir / "model.pkl"
+    try:
+        model = joblib.load(model_path)
+    except FileNotFoundError:
+        raise FileNotFoundError(f"Model artifact not found: {model_path}") from None
 
     features_df = build_features(df)
-    last_row = features_df.iloc[-1].copy()
-
-    X_last = pd.DataFrame([last_row[feature_columns].values], columns=feature_columns)
-    probs = model.predict_proba(X_last)[0]
+    last_row, x_last = _build_model_input(features_df, feature_columns)
+    probs = model.predict_proba(x_last)[0]
 
     prob_down = float(probs[0])
     prob_unsure = float(probs[1])
     prob_up = float(probs[2])
 
+    margin = (
+        decision_margin_override
+        if decision_margin_override is not None
+        else float(decision_config.get("decision_margin", training_config["decision_margin"]))
+    )
+
     decision = apply_decision_layer(
         prob_down=prob_down,
         prob_unsure=prob_unsure,
         prob_up=prob_up,
-        margin=training_config["decision_margin"],
+        margin=margin,
     )
 
     confidence = float(max(probs) - sorted(probs)[-2])
@@ -165,4 +214,7 @@ def predict_latest_forecast(df: pd.DataFrame, artifacts_dir: Path) -> Dict[str, 
         "volatility_regime": detect_volatility_regime(last_row),
         "momentum_state": detect_momentum_state(last_row),
         "model_version": model_meta["model_version"],
+        "latest_close": float(df["close"].iloc[-1]),
+        "last_candle_time": df.index[-1].isoformat(),
+        "feature_count": len(feature_columns),
     }
