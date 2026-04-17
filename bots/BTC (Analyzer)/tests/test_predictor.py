@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas as pd
 import pytest
 
-from predictor import build_features, predict_latest_forecast
+from app.predictor import build_features, predict_latest_forecast
 
 
 def test_feature_build_minimal() -> None:

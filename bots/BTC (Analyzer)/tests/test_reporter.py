@@ -1,4 +1,4 @@
-from reporter import format_forecast_report
+from app.reporter import format_forecast_report
 
 
 def test_reporter_format() -> None:

@@ -1,4 +1,4 @@
-from run_daily_bot import main
+from app.runtime import main
 
 
 if __name__ == "__main__":

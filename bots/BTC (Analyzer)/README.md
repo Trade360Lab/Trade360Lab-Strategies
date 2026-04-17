@@ -17,18 +17,20 @@
 
 ```text
 .
+├── app/
+│   ├── binance_loader.py
+│   ├── predictor.py
+│   ├── reporter.py
+│   ├── runtime.py
+│   └── settings.py
 ├── artifacts/
 │   ├── decision_config.json
 │   ├── feature_columns.json
 │   ├── model_meta.json
 │   ├── model.pkl
 │   └── training_config.json
-├── binance_loader.py
-├── predictor.py
-├── reporter.py
 ├── run_daily_bot.py
 ├── run_daily_boy.py
-├── settings.py
 ├── requirements.txt
 ├── Dockerfile
 ├── docker-compose.yml

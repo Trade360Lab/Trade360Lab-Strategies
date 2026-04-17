@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from settings import load_runtime_settings
+from app.settings import load_runtime_settings
 
 
 def test_env_settings_defaults(monkeypatch, tmp_path: Path) -> None:
