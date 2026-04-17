@@ -1,25 +1,33 @@
-# EMA Crossover
+<div align="center">
+  <h1>EMA Crossover</h1>
+</div>
 
-`ema_cross` is a trend-following strategy based on a fast and slow exponential moving average.
+`ema_cross` — трендовая стратегия на пересечении быстрой и медленной экспоненциальных скользящих средних.
 
-## Logic
+<div align="center">
+  <h2>Логика</h2>
+</div>
 
-- `entry_long`: fast EMA crosses above slow EMA.
-- `exit_long`: fast EMA crosses below slow EMA.
-- `entry_short`: optional mirror of `exit_long`.
-- `exit_short`: optional mirror of `entry_long`.
+- `entry_long`: быстрая EMA пересекает медленную снизу вверх
+- `exit_long`: быстрая EMA пересекает медленную сверху вниз
+- `entry_short`: опциональное зеркальное поведение для `exit_long`
+- `exit_short`: опциональное зеркальное поведение для `entry_long`
 
-The strategy only compares the current bar to the previous bar, so it does not use future values.
+Стратегия использует только текущий и предыдущий бар, поэтому будущие значения не используются.
 
-## Parameters
+<div align="center">
+  <h2>Параметры</h2>
+</div>
 
-| Name | Description |
+| Параметр | Описание |
 | --- | --- |
-| `fast_period` | Fast EMA lookback period. |
-| `slow_period` | Slow EMA lookback period. |
-| `allow_short` | Enables symmetric short signals. |
+| `fast_period` | Период быстрой EMA. |
+| `slow_period` | Период медленной EMA. |
+| `allow_short` | Включает симметричные short-сигналы. |
 
-## Required Columns
+<div align="center">
+  <h2>Обязательные Колонки</h2>
+</div>
 
 - `open`
 - `high`
@@ -27,9 +35,11 @@ The strategy only compares the current bar to the previous bar, so it does not u
 - `close`
 - `volume`
 
-Input data must use a datetime index or a datetime `timestamp` column.
+Входные данные должны использовать datetime index или datetime колонку `timestamp`.
 
-## Output Columns
+<div align="center">
+  <h2>Выходные Колонки</h2>
+</div>
 
 - `entry_long`
 - `entry_short`
@@ -38,7 +48,9 @@ Input data must use a datetime index or a datetime `timestamp` column.
 - `ema_fast`
 - `ema_slow`
 
-## Example
+<div align="center">
+  <h2>Пример Использования</h2>
+</div>
 
 ```python
 from shared.registry import StrategyRegistry
@@ -48,7 +60,9 @@ strategy = registry.create("ema_cross", {"fast_period": 10, "slow_period": 30})
 result = strategy.run(df)
 ```
 
-## Caveats
+<div align="center">
+  <h2>Ограничения</h2>
+</div>
 
-- Flat or choppy markets can generate frequent whipsaws.
-- `fast_period` must stay below `slow_period`.
+- Во флэте стратегия может давать много ложных пересечений.
+- `fast_period` должен быть меньше `slow_period`.

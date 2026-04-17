@@ -1,27 +1,35 @@
-# RSI Reversion
+<div align="center">
+  <h1>RSI Reversion</h1>
+</div>
 
-`rsi_reversion` is a mean-reversion strategy built around RSI recovering from oversold or overbought extremes.
+`rsi_reversion` — mean reversion стратегия, построенная на возврате RSI из зон перепроданности и перекупленности.
 
-## Logic
+<div align="center">
+  <h2>Логика</h2>
+</div>
 
-- `entry_long`: RSI crosses back above the `oversold` threshold.
-- `exit_long`: RSI crosses above `exit_mid` or reaches the `overbought` threshold.
-- `entry_short`: optional mirror logic when RSI crosses back below `overbought`.
-- `exit_short`: optional mirror logic when RSI crosses below `exit_mid` or reaches `oversold`.
+- `entry_long`: RSI возвращается выше уровня `oversold`
+- `exit_long`: RSI пересекает вверх `exit_mid` или достигает зоны `overbought`
+- `entry_short`: опциональная зеркальная логика при возврате RSI ниже `overbought`
+- `exit_short`: опциональная зеркальная логика при пересечении вниз `exit_mid` или достижении `oversold`
 
-Signals are based only on current and previous bars.
+Сигналы рассчитываются только по текущему и предыдущему барам.
 
-## Parameters
+<div align="center">
+  <h2>Параметры</h2>
+</div>
 
-| Name | Description |
+| Параметр | Описание |
 | --- | --- |
-| `rsi_period` | RSI smoothing period. |
-| `oversold` | Oversold level used for long recovery entries. |
-| `overbought` | Overbought level used for short recovery entries. |
-| `exit_mid` | Midline used to close mean-reversion positions. |
-| `allow_short` | Enables short-side signals. |
+| `rsi_period` | Период сглаживания RSI. |
+| `oversold` | Уровень перепроданности для long-входа. |
+| `overbought` | Уровень перекупленности для short-входа. |
+| `exit_mid` | Средний уровень для выхода из позиции. |
+| `allow_short` | Включает short-логику. |
 
-## Required Columns
+<div align="center">
+  <h2>Обязательные Колонки</h2>
+</div>
 
 - `open`
 - `high`
@@ -29,9 +37,11 @@ Signals are based only on current and previous bars.
 - `close`
 - `volume`
 
-Input data must use a datetime index or a datetime `timestamp` column.
+Входные данные должны использовать datetime index или datetime колонку `timestamp`.
 
-## Output Columns
+<div align="center">
+  <h2>Выходные Колонки</h2>
+</div>
 
 - `entry_long`
 - `entry_short`
@@ -39,7 +49,9 @@ Input data must use a datetime index or a datetime `timestamp` column.
 - `exit_short`
 - `rsi`
 
-## Example
+<div align="center">
+  <h2>Пример Использования</h2>
+</div>
 
 ```python
 from shared.registry import StrategyRegistry
@@ -52,7 +64,9 @@ strategy = registry.create(
 result = strategy.run(df)
 ```
 
-## Caveats
+<div align="center">
+  <h2>Ограничения</h2>
+</div>
 
-- In strong trends RSI can remain extreme for extended periods.
-- Thresholds must satisfy `oversold < exit_mid < overbought`.
+- В сильном тренде RSI может долго оставаться в экстремальной зоне.
+- Параметры должны удовлетворять условию `oversold < exit_mid < overbought`.

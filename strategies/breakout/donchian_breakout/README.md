@@ -1,25 +1,33 @@
-# Donchian Breakout
+<div align="center">
+  <h1>Donchian Breakout</h1>
+</div>
 
-`donchian_breakout` is a breakout strategy based on prior Donchian channel boundaries.
+`donchian_breakout` — breakout стратегия на пробое предыдущих границ канала Дончиана.
 
-## Logic
+<div align="center">
+  <h2>Логика</h2>
+</div>
 
-- `entry_long`: close crosses above the prior upper Donchian band.
-- `exit_long`: close crosses below the prior exit-channel midline.
-- `entry_short`: optional mirror logic when close crosses below the prior lower band.
-- `exit_short`: optional mirror logic when close crosses back above the prior exit midline.
+- `entry_long`: цена закрытия пересекает вверх предыдущую верхнюю границу канала
+- `exit_long`: цена закрытия пересекает вниз предыдущую midline exit-канала
+- `entry_short`: опциональная зеркальная логика при пробое предыдущей нижней границы
+- `exit_short`: опциональная зеркальная логика при возврате выше предыдущей exit midline
 
-The strategy uses shifted channel values for all trigger conditions, so the current bar is never compared against a channel that already includes its own high or low.
+Для всех триггеров используются сдвинутые значения канала, поэтому текущий бар не сравнивается с каналом, который уже включает его собственные high/low.
 
-## Parameters
+<div align="center">
+  <h2>Параметры</h2>
+</div>
 
-| Name | Description |
+| Параметр | Описание |
 | --- | --- |
-| `lookback` | Donchian lookback used for entries. |
-| `exit_lookback` | Donchian lookback used for exit midline. |
-| `allow_short` | Enables short-side breakout signals. |
+| `lookback` | Окно Дончиана для входов. |
+| `exit_lookback` | Окно Дончиана для расчёта exit midline. |
+| `allow_short` | Включает short breakout сигналы. |
 
-## Required Columns
+<div align="center">
+  <h2>Обязательные Колонки</h2>
+</div>
 
 - `open`
 - `high`
@@ -27,9 +35,11 @@ The strategy uses shifted channel values for all trigger conditions, so the curr
 - `close`
 - `volume`
 
-Input data must use a datetime index or a datetime `timestamp` column.
+Входные данные должны использовать datetime index или datetime колонку `timestamp`.
 
-## Output Columns
+<div align="center">
+  <h2>Выходные Колонки</h2>
+</div>
 
 - `entry_long`
 - `entry_short`
@@ -42,7 +52,9 @@ Input data must use a datetime index or a datetime `timestamp` column.
 - `donchian_exit_lower`
 - `donchian_exit_mid`
 
-## Example
+<div align="center">
+  <h2>Пример Использования</h2>
+</div>
 
 ```python
 from shared.registry import StrategyRegistry
@@ -55,7 +67,9 @@ strategy = registry.create(
 result = strategy.run(df)
 ```
 
-## Caveats
+<div align="center">
+  <h2>Ограничения</h2>
+</div>
 
-- Breakout systems can whipsaw during range-bound markets.
-- Signals are sparser on higher lookback windows.
+- Во время бокового рынка breakout-подход может часто давать ложные входы.
+- При больших окнах `lookback` сигналы становятся реже.

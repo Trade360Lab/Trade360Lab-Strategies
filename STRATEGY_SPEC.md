@@ -1,72 +1,84 @@
-# Strategy Library Specification
+<div align="center">
+  <h1>Спецификация Библиотеки Стратегий</h1>
+</div>
 
-## Purpose
+<div align="center">
+  <h2>Назначение</h2>
+</div>
 
-This repository contains a manifest-driven library of trading strategies for Trade360Lab. The library is designed to support backtesting, optimization, and future live-trading integrations without coupling strategy logic to a specific execution engine.
+Этот репозиторий содержит manifest-driven библиотеку торговых стратегий для Trade360Lab. Библиотека должна поддерживать бэктестинг, оптимизацию и дальнейшую интеграцию в live-режим без жёсткой привязки к конкретному движку исполнения.
 
-## Strategy Contract
+<div align="center">
+  <h2>Контракт Стратегии</h2>
+</div>
 
-Every strategy must inherit from `shared.base_strategy.BaseStrategy`.
+Каждая стратегия обязана наследоваться от `shared.base_strategy.BaseStrategy`.
 
-Required class attributes:
+Обязательные class attributes:
 - `slug`
 - `name`
 - `category`
 - `default_params`
 
-Required methods:
+Обязательные методы:
 - `validate_params()`
 - `compute_indicators(df)`
 - `generate_signals(df)`
 
-Runtime flow:
-1. `run(df)` performs a defensive copy of the input dataframe.
-2. Input schema validation runs before any indicator computation.
-3. `compute_indicators(df)` adds derived columns.
-4. `generate_signals(df)` populates the standard signal columns.
-5. Output schema validation guarantees required signal columns exist and are boolean-like.
+Порядок выполнения:
+1. `run(df)` делает defensive copy входного DataFrame.
+2. До расчёта индикаторов выполняется валидация входной схемы.
+3. `compute_indicators(df)` добавляет производные колонки.
+4. `generate_signals(df)` заполняет стандартные сигнальные колонки.
+5. Валидация выхода проверяет наличие обязательных сигналов и их корректный булев тип.
 
-## Input Schema
+<div align="center">
+  <h2>Входная Схема</h2>
+</div>
 
-Required OHLCV columns:
+Обязательные OHLCV колонки:
 - `open`
 - `high`
 - `low`
 - `close`
 - `volume`
 
-Time axis requirements:
-- Input must have either a datetime index or a datetime `timestamp` column.
-- The time axis must be sorted ascending.
-- Duplicate timestamps are not allowed.
-- Empty dataframes are invalid.
+Требования ко времени:
+- на входе должен быть либо datetime index, либо datetime колонка `timestamp`
+- временная ось должна быть отсортирована по возрастанию
+- дублирующиеся timestamps запрещены
+- пустые DataFrame запрещены
 
-## Output Schema
+<div align="center">
+  <h2>Выходная Схема</h2>
+</div>
 
-Required signal columns:
+Обязательные сигнальные колонки:
 - `entry_long`
 - `entry_short`
 - `exit_long`
 - `exit_short`
 
-Optional columns:
+Опциональные колонки:
 - `stop_loss`
 - `take_profit`
 - `signal_score`
 - `regime`
-- any indicator columns used by the strategy
+- любые индикаторные колонки, которые рассчитывает стратегия
 
-Signal columns must be boolean or safely coercible to boolean.
+Сигнальные колонки должны быть булевыми или безопасно приводимыми к булевому типу.
 
-## Naming Conventions
+<div align="center">
+  <h2>Соглашения По Именованию</h2>
+</div>
 
-General rules:
-- Strategy slug: lowercase snake_case.
-- Manifest `class_name`: PascalCase and must match the class in `strategy.py`.
-- Strategy directories: match the slug exactly.
-- Indicator column names: short, descriptive, deterministic.
+Общие правила:
+- `slug` стратегии: lowercase snake_case
+- `class_name` в manifest: PascalCase и должен совпадать с классом в `strategy.py`
+- директория стратегии должна точно совпадать со `slug`
+- имена индикаторных колонок должны быть короткими, предсказуемыми и стабильными
 
-Examples:
+Примеры:
 - `ema_fast`
 - `ema_slow`
 - `rsi`
@@ -74,29 +86,33 @@ Examples:
 - `donchian_lower`
 - `donchian_mid`
 
-## Parameter Rules
+<div align="center">
+  <h2>Правила Для Параметров</h2>
+</div>
 
-All user-facing parameters must be declared in `manifest.json`.
+Все пользовательские параметры должны быть объявлены в `manifest.json`.
 
-Each parameter definition must include:
+Каждый параметр обязан содержать:
 - `type`
 - `default`
 - `description`
 
-Use these fields when applicable:
+Дополнительные поля при необходимости:
 - `min`
 - `max`
 - `step`
 - `options`
 - `optimize`
 
-Strategy implementations may enforce stricter semantic checks than the manifest alone. For example, `fast_period < slow_period`.
+Реализация стратегии может накладывать более строгие семантические ограничения, чем сам manifest. Например, `fast_period < slow_period`.
 
-## Manifest Rules
+<div align="center">
+  <h2>Правила Для Manifest</h2>
+</div>
 
-Each strategy directory must include `manifest.json`.
+Каждая стратегия обязана содержать `manifest.json`.
 
-Required manifest fields:
+Обязательные поля manifest:
 - `slug`
 - `name`
 - `category`
@@ -110,56 +126,61 @@ Required manifest fields:
 - `outputs`
 - `parameters`
 
-Manifest expectations:
-- `slug` must be unique across the repository.
-- `direction` may contain `long`, `short`, or both.
-- `required_columns` must include the OHLCV base schema.
-- `outputs` must include the four required signal columns.
-- `class_name` must point to a class defined in `strategy.py`.
+Ожидания от manifest:
+- `slug` должен быть уникальным по всему репозиторию
+- `direction` может содержать `long`, `short` или оба варианта
+- `required_columns` должен включать базовую OHLCV схему
+- `outputs` должен включать четыре обязательные сигнальные колонки
+- `class_name` должен указывать на класс из `strategy.py`
 
-`shared.registry.StrategyRegistry` treats the manifest as the source of truth for discovery and instantiation.
+`shared.registry.StrategyRegistry` использует manifest как источник правды для discovery и instantiation.
 
-## Lookahead Bias Policy
+<div align="center">
+  <h2>Политика Lookahead Bias</h2>
+</div>
 
-Lookahead bias is forbidden.
+Lookahead bias запрещён.
 
-Allowed:
-- comparisons to prior bars via `shift(1)` or larger positive shifts
-- rolling calculations that only use current and past bars
+Разрешено:
+- сравнение с прошлыми барами через `shift(1)` и другие положительные сдвиги
+- rolling calculations, использующие только текущие и прошлые бары
 
-Forbidden:
-- `shift(-1)` or any future-bar access for current-bar signal generation
-- comparisons against indicator values that already include future data
-- hidden post-processing that mutates historical signals using later observations
+Запрещено:
+- `shift(-1)` и любой доступ к будущим барам при генерации текущего сигнала
+- сравнение с индикатором, который уже включает будущие значения
+- скрытая постобработка, изменяющая исторические сигналы на основе более поздних наблюдений
 
-## Rules for New Strategies
+<div align="center">
+  <h2>Правила Для Новых Стратегий</h2>
+</div>
 
-Each strategy must include:
+Каждая стратегия обязана содержать:
 - `strategy.py`
 - `manifest.json`
 - `README.md`
 - `tests/`
 
-Each strategy must:
-- inherit from `BaseStrategy`
-- validate its parameters explicitly
-- document required columns and output columns
-- use reusable indicators or shared helpers when possible
-- avoid duplicating cross/signal logic that belongs in `shared/` or `indicators/`
+Каждая стратегия должна:
+- наследоваться от `BaseStrategy`
+- явно валидировать параметры
+- документировать required columns и output columns
+- переиспользовать общие индикаторы и helpers, когда это возможно
+- не дублировать signal/cross логику, которая уже должна жить в `shared/` или `indicators/`
 
-## Testing Requirements
+<div align="center">
+  <h2>Требования К Тестам</h2>
+</div>
 
-Every strategy must have tests covering:
-- smoke execution on fixture OHLCV data
-- required output schema
-- deterministic repeated runs
-- invalid params with clear errors
-- basic no-lookahead sanity
+Для каждой стратегии обязательны тесты на:
+- smoke execution на fixture OHLCV data
+- наличие обязательной выходной схемы
+- детерминированность повторного запуска
+- понятные ошибки на невалидных параметрах
+- базовую sanity-проверку на отсутствие lookahead
 
-Core infrastructure must have tests for:
-- indicators
+Для core-инфраструктуры обязательны тесты на:
+- индикаторы
 - signal helpers
 - manifest validation
-- registry discovery and instantiation
-- base strategy behavior
-
+- registry discovery и instantiation
+- базовое поведение `BaseStrategy`

@@ -1,49 +1,61 @@
-# Contributing
+<div align="center">
+  <h1>Правила Участия В Разработке</h1>
+</div>
 
-## Development Setup
+<div align="center">
+  <h2>Подготовка Окружения</h2>
+</div>
 
-Use Python 3.11+.
+Используйте Python 3.11+.
 
-Recommended setup:
+Рекомендуемый setup:
 
 ```bash
 python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 ```
 
-## Repository Layout
+<div align="center">
+  <h2>Структура Репозитория</h2>
+</div>
 
-- `strategies/`: strategy implementations grouped by category
-- `indicators/`: reusable indicator functions
-- `shared/`: contracts, validation, registry, and common helpers
-- `examples/`: example configuration payloads
-- `tests/`: unit and integration coverage
+- `strategies/`: реализации стратегий, сгруппированные по категориям
+- `indicators/`: переиспользуемые индикаторы
+- `shared/`: контракты, validation, registry и общие helpers
+- `examples/`: примеры пользовательских конфигов
+- `tests/`: unit и integration тесты
 
-## Adding a New Strategy
+<div align="center">
+  <h2>Как Добавить Новую Стратегию</h2>
+</div>
 
-1. Create a directory under the correct category inside `strategies/`.
-2. Use a lowercase snake_case slug for the folder name.
-3. Add `strategy.py` with a `BaseStrategy` subclass.
-4. Add `manifest.json` that fully describes the strategy.
-5. Add `README.md` with strategy-specific documentation.
-6. Add strategy tests under the local `tests/` directory.
-7. Add an example config under `examples/` if the strategy is meant to be user-facing.
+1. Создайте директорию в нужной категории внутри `strategies/`.
+2. Используйте lowercase snake_case slug для имени каталога.
+3. Добавьте `strategy.py` с классом-наследником `BaseStrategy`.
+4. Добавьте `manifest.json` с полным описанием стратегии.
+5. Добавьте `README.md` с документацией по стратегии.
+6. Добавьте локальные тесты в директорию `tests/`.
+7. Если стратегия пользовательская, добавьте пример конфига в `examples/`.
 
-## Slug Rules
+<div align="center">
+  <h2>Правила Для Slug</h2>
+</div>
 
-- Use lowercase snake_case.
-- Keep the slug short and descriptive.
-- The slug must be globally unique.
-- The strategy directory name must match the slug.
+- используйте lowercase snake_case
+- slug должен быть коротким и понятным
+- slug должен быть уникальным во всём репозитории
+- имя директории стратегии должно совпадать со slug
 
-Examples:
+Примеры:
 - `ema_cross`
 - `rsi_reversion`
 - `donchian_breakout`
 
-## Manifest Checklist
+<div align="center">
+  <h2>Checklist Для Manifest</h2>
+</div>
 
-Each manifest must declare:
+Каждый manifest должен содержать:
 - `slug`
 - `name`
 - `category`
@@ -57,38 +69,44 @@ Each manifest must declare:
 - `outputs`
 - `parameters`
 
-Every parameter should include a meaningful `description` and a realistic default.
+У каждого параметра должно быть осмысленное `description` и реалистичное `default` значение.
 
-## Required Tests
+<div align="center">
+  <h2>Обязательные Тесты</h2>
+</div>
 
-For every new strategy:
+Для каждой новой стратегии:
 - smoke test
 - schema test
 - determinism test
 - invalid params test
 - no-lookahead sanity test
 
-For shared infrastructure changes:
-- update or add unit tests for affected helpers
-- add integration coverage when registry or discovery behavior changes
+Для изменений в shared/core:
+- обновляйте или добавляйте unit tests для затронутых helpers
+- добавляйте integration coverage, если меняется registry или discovery behavior
 
-## Running Quality Checks
+<div align="center">
+  <h2>Запуск Проверок</h2>
+</div>
 
-Run lint:
+Запуск линтера:
 
 ```bash
 .venv/bin/ruff check .
 ```
 
-Run tests:
+Запуск тестов:
 
 ```bash
 .venv/bin/python -m pytest
 ```
 
-## Commit Message Rules
+<div align="center">
+  <h2>Правила Для Commit Messages</h2>
+</div>
 
-Use atomic commits with these patterns:
+Используйте атомарные коммиты с такими шаблонами:
 
 - `chore(core): ...`
 - `chore(registry): ...`
@@ -101,11 +119,10 @@ Use atomic commits with these patterns:
 - `refactor(...): ...`
 - `feat(<strategy_slug>): ...`
 
-Important rule:
-- each new strategy must be a separate commit using `feat(<strategy_slug>): ...`
+Ключевое правило:
+- каждая новая стратегия должна попадать в отдельный commit вида `feat(<strategy_slug>): ...`
 
-Do not:
-- combine multiple strategies in one commit
-- use vague messages like `update files`
-- mix unrelated refactors into strategy feature commits
-
+Нельзя:
+- объединять несколько стратегий в один commit
+- использовать размытые сообщения вроде `update files`
+- смешивать несвязанные refactor-изменения с feature-коммитом стратегии
