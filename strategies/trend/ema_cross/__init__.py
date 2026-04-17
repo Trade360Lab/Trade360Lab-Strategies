@@ -1,0 +1,2 @@
+"""EMA crossover strategy package."""
+

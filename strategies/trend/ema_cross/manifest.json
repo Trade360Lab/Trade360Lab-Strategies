@@ -1,0 +1,47 @@
+{
+  "slug": "ema_cross",
+  "name": "EMA Crossover",
+  "category": "trend",
+  "version": "1.0.0",
+  "description": "Trend-following strategy that enters on fast and slow EMA crossovers.",
+  "direction": ["long", "short"],
+  "class_name": "EMACrossStrategy",
+  "timeframes": ["15m", "1h", "4h", "1d"],
+  "symbols": ["BTCUSDT", "ETHUSDT", "AAPL", "SPY"],
+  "required_columns": ["open", "high", "low", "close", "volume"],
+  "outputs": [
+    "entry_long",
+    "entry_short",
+    "exit_long",
+    "exit_short",
+    "ema_fast",
+    "ema_slow"
+  ],
+  "parameters": {
+    "fast_period": {
+      "type": "int",
+      "default": 12,
+      "min": 1,
+      "max": 200,
+      "step": 1,
+      "optimize": true,
+      "description": "Fast EMA lookback period."
+    },
+    "slow_period": {
+      "type": "int",
+      "default": 26,
+      "min": 2,
+      "max": 400,
+      "step": 1,
+      "optimize": true,
+      "description": "Slow EMA lookback period."
+    },
+    "allow_short": {
+      "type": "bool",
+      "default": true,
+      "optimize": false,
+      "description": "Enable symmetric short entries and exits."
+    }
+  }
+}
+
