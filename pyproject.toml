@@ -22,8 +22,8 @@ dev = [
   "ruff>=0.4.0",
 ]
 
-[tool.setuptools]
-packages = ["indicators", "shared", "tests"]
+[tool.setuptools.packages.find]
+include = ["shared*", "indicators*", "strategies*"]
 
 [tool.black]
 line-length = 88
@@ -39,4 +39,3 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 pythonpath = ["."]
-
