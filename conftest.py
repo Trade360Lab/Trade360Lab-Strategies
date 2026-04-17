@@ -1,4 +1,4 @@
-"""Pytest fixtures shared across the test suite."""
+"""Pytest fixtures shared across the entire repository."""
 
 from __future__ import annotations
 
@@ -12,4 +12,3 @@ def ohlcv_df():
     """Return a deterministic OHLCV dataframe for strategy tests."""
 
     return make_ohlcv_fixture()
-
