@@ -21,7 +21,6 @@ def main() -> None:
     symbol = model_meta["symbol"]
     timeframe = model_meta["timeframe"]
     lookback_bars = training_config["lookback_bars"]
-
     expected_freq = training_config["expected_freq"]
 
     print(f"Loading market data: symbol={symbol}, timeframe={timeframe}, lookback={lookback_bars}")
