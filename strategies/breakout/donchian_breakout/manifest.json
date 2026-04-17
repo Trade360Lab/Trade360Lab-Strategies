@@ -1,0 +1,51 @@
+{
+  "slug": "donchian_breakout",
+  "name": "Donchian Breakout",
+  "category": "breakout",
+  "version": "1.0.0",
+  "description": "Breakout strategy that trades closes beyond prior Donchian channel boundaries.",
+  "direction": ["long", "short"],
+  "class_name": "DonchianBreakoutStrategy",
+  "timeframes": ["1h", "4h", "1d"],
+  "symbols": ["BTCUSDT", "ETHUSDT", "SOLUSDT", "QQQ"],
+  "required_columns": ["open", "high", "low", "close", "volume"],
+  "outputs": [
+    "entry_long",
+    "entry_short",
+    "exit_long",
+    "exit_short",
+    "donchian_upper",
+    "donchian_lower",
+    "donchian_mid",
+    "donchian_exit_upper",
+    "donchian_exit_lower",
+    "donchian_exit_mid"
+  ],
+  "parameters": {
+    "lookback": {
+      "type": "int",
+      "default": 20,
+      "min": 2,
+      "max": 200,
+      "step": 1,
+      "optimize": true,
+      "description": "Entry Donchian lookback window."
+    },
+    "exit_lookback": {
+      "type": "int",
+      "default": 10,
+      "min": 2,
+      "max": 200,
+      "step": 1,
+      "optimize": true,
+      "description": "Exit Donchian lookback window used to derive the exit midline."
+    },
+    "allow_short": {
+      "type": "bool",
+      "default": true,
+      "optimize": false,
+      "description": "Enable symmetric short breakout signals."
+    }
+  }
+}
+
