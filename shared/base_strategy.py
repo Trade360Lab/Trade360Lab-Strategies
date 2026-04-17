@@ -7,11 +7,14 @@ from typing import Any, ClassVar
 
 import pandas as pd
 
-from shared.types import Params, REQUIRED_OHLCV_COLUMNS, REQUIRED_SIGNAL_COLUMNS
-
-
-class StrategyValidationError(ValueError):
-    """Raised when strategy inputs or parameters violate the contract."""
+from shared.types import Params, StrategyValidationError
+from shared.validation import (
+    validate_dataframe_not_empty,
+    validate_no_duplicate_timestamps,
+    validate_ohlcv_columns,
+    validate_sorted_index_or_timestamp,
+    validate_strategy_output,
+)
 
 
 class BaseStrategy(ABC):
@@ -50,14 +53,10 @@ class BaseStrategy(ABC):
 
         if not isinstance(df, pd.DataFrame):
             raise StrategyValidationError("Strategy input must be a pandas DataFrame.")
-        if df.empty:
-            raise StrategyValidationError("Strategy input DataFrame must not be empty.")
-        missing = [column for column in REQUIRED_OHLCV_COLUMNS if column not in df.columns]
-        if missing:
-            raise StrategyValidationError(
-                "Strategy input is missing required OHLCV columns: "
-                + ", ".join(missing)
-            )
+        validate_dataframe_not_empty(df)
+        validate_ohlcv_columns(df)
+        validate_sorted_index_or_timestamp(df)
+        validate_no_duplicate_timestamps(df)
 
     def run(self, df: pd.DataFrame) -> pd.DataFrame:
         """Run the full strategy pipeline on a defensive copy of ``df``."""
@@ -67,16 +66,5 @@ class BaseStrategy(ABC):
         result = self.compute_indicators(result)
         result = self.generate_signals(result)
 
-        missing_outputs = [
-            column for column in REQUIRED_SIGNAL_COLUMNS if column not in result.columns
-        ]
-        if missing_outputs:
-            raise StrategyValidationError(
-                "Strategy output is missing required signal columns: "
-                + ", ".join(missing_outputs)
-            )
-
-        for column in REQUIRED_SIGNAL_COLUMNS:
-            result[column] = result[column].astype(bool)
-
+        validate_strategy_output(result)
         return result

@@ -28,6 +28,10 @@ OPTIONAL_SIGNAL_COLUMNS: tuple[str, ...] = (
 )
 
 
+class StrategyValidationError(ValueError):
+    """Raised when strategy inputs, outputs, or parameters violate the contract."""
+
+
 class ParameterDefinition(TypedDict, total=False):
     """Normalized strategy parameter description loaded from a manifest."""
 
@@ -60,4 +64,3 @@ class StrategyContext:
 
     metadata: StrategyMetadata
     manifest: Mapping[str, Any]
-
