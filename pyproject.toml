@@ -32,10 +32,11 @@ target-version = ["py311", "py312"]
 [tool.ruff]
 line-length = 88
 target-version = "py311"
+exclude = ["templates/WorkingExample"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "B", "UP"]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
+testpaths = ["tests", "strategies"]
 pythonpath = ["."]

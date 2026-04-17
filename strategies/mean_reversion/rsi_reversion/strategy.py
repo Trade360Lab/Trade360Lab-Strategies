@@ -33,7 +33,10 @@ class RSIReversionStrategy(BaseStrategy):
 
         if not isinstance(rsi_period, int) or rsi_period < 2:
             raise StrategyValidationError("rsi_period must be an integer >= 2.")
-        if not all(isinstance(value, (int, float)) for value in (oversold, overbought, exit_mid)):
+        if not all(
+            isinstance(value, (int, float))
+            for value in (oversold, overbought, exit_mid)
+        ):
             raise StrategyValidationError("RSI threshold parameters must be numeric.")
         if not 0 <= oversold < exit_mid < overbought <= 100:
             raise StrategyValidationError(
@@ -69,4 +72,3 @@ class RSIReversionStrategy(BaseStrategy):
             ).fillna(False)
 
         return df
-

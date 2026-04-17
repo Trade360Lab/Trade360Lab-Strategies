@@ -31,7 +31,9 @@ def test_rsi_reversion_is_deterministic(ohlcv_df):
 
 
 def test_rsi_reversion_rejects_invalid_params():
-    with pytest.raises(StrategyValidationError, match="oversold < exit_mid < overbought"):
+    with pytest.raises(
+        StrategyValidationError, match="oversold < exit_mid < overbought"
+    ):
         RSIReversionStrategy(
             params={
                 "rsi_period": 14,

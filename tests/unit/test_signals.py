@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from shared.signals import bars_since, crossunder, crossover, debounce_signal
+from shared.signals import bars_since, crossover, crossunder, debounce_signal
 
 
 def test_crossover_and_crossunder_detect_expected_events():

@@ -32,7 +32,9 @@ class EMACrossStrategy(BaseStrategy):
         if not isinstance(slow_period, int) or slow_period < 1:
             raise StrategyValidationError("slow_period must be an integer >= 1.")
         if fast_period >= slow_period:
-            raise StrategyValidationError("fast_period must be smaller than slow_period.")
+            raise StrategyValidationError(
+                "fast_period must be smaller than slow_period."
+            )
         if not isinstance(allow_short, bool):
             raise StrategyValidationError("allow_short must be a boolean.")
 
@@ -55,4 +57,3 @@ class EMACrossStrategy(BaseStrategy):
             df["exit_short"] = entry_long
 
         return df
-

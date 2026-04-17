@@ -6,7 +6,6 @@ import pytest
 
 from shared.registry import RegistryError, StrategyRegistry
 
-
 MANIFEST = {
     "slug": "stub_strategy",
     "name": "Stub Strategy",

@@ -120,13 +120,17 @@ class StrategyRegistry:
                 f"'{manifest['slug']}' does not exist."
             )
 
-        module_name = ".".join(strategy_path.relative_to(self.root).with_suffix("").parts)
+        module_name = ".".join(
+            strategy_path.relative_to(self.root).with_suffix("").parts
+        )
         try:
             module = importlib.import_module(module_name)
-        except ModuleNotFoundError:
+        except ModuleNotFoundError as exc:
             spec = importlib.util.spec_from_file_location(module_name, strategy_path)
             if spec is None or spec.loader is None:
-                raise RegistryError(f"Could not create import spec for '{strategy_path}'.")
+                raise RegistryError(
+                    f"Could not create import spec for '{strategy_path}'."
+                ) from exc
             module = importlib.util.module_from_spec(spec)
             sys.modules[module_name] = module
             spec.loader.exec_module(module)
@@ -139,6 +143,7 @@ class StrategyRegistry:
             )
         if not issubclass(strategy_class, BaseStrategy):
             raise RegistryError(
-                f"Strategy class '{class_name}' in '{strategy_path}' must inherit BaseStrategy."
+                f"Strategy class '{class_name}' in '{strategy_path}' "
+                "must inherit BaseStrategy."
             )
         return strategy_class

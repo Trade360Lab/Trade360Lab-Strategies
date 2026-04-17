@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any, Mapping
+from typing import Any
 
 from shared.types import REQUIRED_OHLCV_COLUMNS, REQUIRED_SIGNAL_COLUMNS
 
@@ -40,21 +41,33 @@ def validate_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
         )
 
     if not isinstance(normalized["slug"], str) or not normalized["slug"].strip():
-        raise ManifestValidationError("Manifest field 'slug' must be a non-empty string.")
+        raise ManifestValidationError(
+            "Manifest field 'slug' must be a non-empty string."
+        )
     if not isinstance(normalized["name"], str) or not normalized["name"].strip():
-        raise ManifestValidationError("Manifest field 'name' must be a non-empty string.")
-    if not isinstance(normalized["category"], str) or not normalized["category"].strip():
+        raise ManifestValidationError(
+            "Manifest field 'name' must be a non-empty string."
+        )
+    if (
+        not isinstance(normalized["category"], str)
+        or not normalized["category"].strip()
+    ):
         raise ManifestValidationError(
             "Manifest field 'category' must be a non-empty string."
         )
-    if not isinstance(normalized["class_name"], str) or not normalized["class_name"].strip():
+    if (
+        not isinstance(normalized["class_name"], str)
+        or not normalized["class_name"].strip()
+    ):
         raise ManifestValidationError(
             "Manifest field 'class_name' must be a non-empty string."
         )
 
     direction = normalized["direction"]
     if not isinstance(direction, list) or not direction:
-        raise ManifestValidationError("Manifest field 'direction' must be a non-empty list.")
+        raise ManifestValidationError(
+            "Manifest field 'direction' must be a non-empty list."
+        )
     if not set(direction).issubset(ALLOWED_DIRECTIONS):
         raise ManifestValidationError(
             "Manifest field 'direction' may only contain 'long' and 'short'."
@@ -63,10 +76,14 @@ def validate_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
     for field in ("timeframes", "symbols", "required_columns", "outputs"):
         value = normalized[field]
         if not isinstance(value, list) or not value:
-            raise ManifestValidationError(f"Manifest field '{field}' must be a non-empty list.")
+            raise ManifestValidationError(
+                f"Manifest field '{field}' must be a non-empty list."
+            )
 
     missing_required_columns = [
-        column for column in REQUIRED_OHLCV_COLUMNS if column not in normalized["required_columns"]
+        column
+        for column in REQUIRED_OHLCV_COLUMNS
+        if column not in normalized["required_columns"]
     ]
     if missing_required_columns:
         raise ManifestValidationError(
@@ -75,7 +92,9 @@ def validate_manifest(manifest: Mapping[str, Any]) -> dict[str, Any]:
         )
 
     missing_signal_columns = [
-        column for column in REQUIRED_SIGNAL_COLUMNS if column not in normalized["outputs"]
+        column
+        for column in REQUIRED_SIGNAL_COLUMNS
+        if column not in normalized["outputs"]
     ]
     if missing_signal_columns:
         raise ManifestValidationError(
@@ -111,4 +130,3 @@ def _validate_parameter_definition(name: str, definition: Any) -> None:
         raise ManifestValidationError(
             f"Manifest parameter '{name}' of type 'enum' must define 'options'."
         )
-

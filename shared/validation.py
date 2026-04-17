@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable
+from collections.abc import Iterable
 
 import pandas as pd
 from pandas.api.types import is_bool_dtype, is_datetime64_any_dtype
@@ -13,7 +13,7 @@ from shared.types import (
     StrategyValidationError,
 )
 
-BOOLEAN_LIKE_VALUES = {True, False, 0, 1}
+BOOLEAN_LIKE_VALUES = {0, 1}
 
 
 def _missing_columns(df: pd.DataFrame, columns: Iterable[str]) -> list[str]:
@@ -68,7 +68,9 @@ def validate_no_duplicate_timestamps(df: pd.DataFrame) -> None:
             "Strategy input column 'timestamp' must not contain duplicates."
         )
     if is_datetime64_any_dtype(df.index) and df.index.duplicated().any():
-        raise StrategyValidationError("Strategy input index must not contain duplicates.")
+        raise StrategyValidationError(
+            "Strategy input index must not contain duplicates."
+        )
 
 
 def validate_strategy_output(df: pd.DataFrame) -> None:

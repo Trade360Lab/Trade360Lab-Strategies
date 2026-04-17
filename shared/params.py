@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any, Mapping
+from collections.abc import Mapping
+from typing import Any
 
 from shared.manifest_schema import ManifestValidationError
 
@@ -74,4 +75,3 @@ def validate_param_value(name: str, value: Any, definition: Mapping[str, Any]) -
         raise ManifestValidationError(
             f"Parameter '{name}' must be less than or equal to {maximum}."
         )
-

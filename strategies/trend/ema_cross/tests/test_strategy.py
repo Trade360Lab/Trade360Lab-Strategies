@@ -32,7 +32,9 @@ def test_ema_cross_is_deterministic(ohlcv_df):
 
 def test_ema_cross_rejects_invalid_params():
     with pytest.raises(StrategyValidationError, match="smaller"):
-        EMACrossStrategy(params={"fast_period": 20, "slow_period": 10, "allow_short": True})
+        EMACrossStrategy(
+            params={"fast_period": 20, "slow_period": 10, "allow_short": True}
+        )
 
 
 def test_ema_cross_has_no_lookahead_dependency(ohlcv_df):
