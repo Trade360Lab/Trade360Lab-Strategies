@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -8,6 +9,9 @@ from typing import Any
 import joblib
 import numpy as np
 import pandas as pd
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 def compute_rsi(series: pd.Series, period: int = 14) -> pd.Series:
@@ -174,6 +178,7 @@ def predict_latest_forecast(
 
     model_path = artifacts_dir / "model.pkl"
     try:
+        LOGGER.info("Loading model artifact from %s", model_path)
         model = joblib.load(model_path)
     except FileNotFoundError:
         raise FileNotFoundError(f"Model artifact not found: {model_path}") from None
