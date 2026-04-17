@@ -1,4 +1,4 @@
-from app.reporter import format_forecast_report
+from app.reporter import build_telegram_reply_markup, format_forecast_report
 
 
 def test_reporter_format() -> None:
@@ -22,3 +22,15 @@ def test_reporter_format() -> None:
     assert "BTC Daily Outlook" in report
     assert "Decision: UP" in report
     assert "Model version: btc_h1_xgb_v1" in report
+
+
+def test_telegram_reply_markup_contains_buttons() -> None:
+    reply_markup = build_telegram_reply_markup("BTCUSDT")
+
+    assert reply_markup is not None
+    assert "inline_keyboard" in reply_markup
+    buttons = reply_markup["inline_keyboard"][0]
+    assert buttons[0]["text"] == "Open Binance"
+    assert "BTC_USDT" in buttons[0]["url"]
+    assert buttons[1]["text"] == "Open TradingView"
+    assert "BINANCE%3ABTCUSDT" in buttons[1]["url"]

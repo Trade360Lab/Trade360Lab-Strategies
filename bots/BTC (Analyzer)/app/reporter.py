@@ -10,6 +10,29 @@ LOGGER = logging.getLogger(__name__)
 TELEGRAM_MESSAGE_LIMIT = 4096
 
 
+def _build_market_urls(symbol: str) -> tuple[str, str]:
+    base_asset = symbol[:-4] if len(symbol) > 4 else symbol
+    quote_asset = symbol[-4:] if len(symbol) > 4 else "USDT"
+    binance_url = f"https://www.binance.com/en/trade/{base_asset}_{quote_asset}?type=spot"
+    tradingview_url = f"https://www.tradingview.com/chart/?symbol=BINANCE%3A{symbol}"
+    return binance_url, tradingview_url
+
+
+def build_telegram_reply_markup(symbol: str | None) -> dict[str, Any] | None:
+    if not symbol:
+        return None
+
+    binance_url, tradingview_url = _build_market_urls(symbol)
+    return {
+        "inline_keyboard": [
+            [
+                {"text": "Open Binance", "url": binance_url},
+                {"text": "Open TradingView", "url": tradingview_url},
+            ]
+        ]
+    }
+
+
 def format_forecast_report(forecast: dict[str, Any], title: str = "BTC Daily Outlook") -> str:
     symbol = forecast["symbol"]
     timeframe = forecast["timeframe"]
@@ -77,6 +100,7 @@ def send_telegram_report(
     chat_id: str,
     timeout_seconds: int = 15,
     parse_mode: str | None = None,
+    symbol: str | None = None,
 ) -> bool:
     if not enabled:
         LOGGER.info("Telegram sending is disabled by configuration.")
@@ -87,12 +111,15 @@ def send_telegram_report(
 
     url = f"https://api.telegram.org/bot{token}/sendMessage"
     chunks = _split_telegram_message(report_text)
+    reply_markup = build_telegram_reply_markup(symbol)
     success = True
 
-    for chunk in chunks:
+    for index, chunk in enumerate(chunks):
         payload: dict[str, Any] = {"chat_id": chat_id, "text": chunk}
         if parse_mode is not None:
             payload["parse_mode"] = parse_mode
+        if reply_markup is not None and index == len(chunks) - 1:
+            payload["reply_markup"] = reply_markup
 
         try:
             response = requests.post(url, json=payload, timeout=timeout_seconds)

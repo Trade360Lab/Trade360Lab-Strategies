@@ -85,4 +85,5 @@ def main() -> None:
         token=settings.telegram_bot_token,
         chat_id=settings.telegram_chat_id,
         timeout_seconds=settings.request_timeout_seconds,
+        symbol=forecast["symbol"],
     )
