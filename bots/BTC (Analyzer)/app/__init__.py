@@ -1,1 +1,0 @@
-"""BTC analyzer application package."""

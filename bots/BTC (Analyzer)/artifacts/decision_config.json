@@ -1,6 +1,0 @@
-{
-  "decision_margin": 0.10,
-  "telegram_enabled_default": false,
-  "report_title": "BTC Daily Outlook",
-  "use_closed_candle_only": true
-}
